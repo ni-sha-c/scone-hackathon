@@ -32,10 +32,12 @@ class Res(nn.Module):
         
 
     def forward(self, x):
-        x1 = torch.tanh(self.fc1(x)) ## do relu instead unless strong reason for tanh
+        x1 = torch.tanh(self.fc1(x))
         x2 = torch.tanh(self.fc2(1.0 * x + x1)) 
-        x3 = self.fc3(x2)
-        return x3
+        x3 = torch.tanh(self.dropout1(self.fc3(x2)))
+        x4 = torch.tanh(self.fc4(1.0 * x + x3))
+        x5 = torch.tanh(self.fc5(x4))
+        return x5
 
 class SimpleReluNet(nn.Module):
     def __init__(self, input_dim, hidden_dim):
@@ -48,7 +50,7 @@ class SimpleReluNet(nn.Module):
         self.fc5 = nn.Linear(hidden_dim, input_dim)
         self.dropout1 = nn.Dropout(0.5)
         self.dropout2 = nn.Dropout(0.25)
-        
+
         ## weight initialization
         torch.nn.init.xavier_uniform(self.fc1.weight)
         torch.nn.init.xavier_uniform(self.fc2.weight)
@@ -72,9 +74,10 @@ class GeneralReluNet(nn.Module):
         for i in range(len(layer_sizes) - 1):
             layers.append(nn.Linear(layer_sizes[i], layer_sizes[i+1]))
             if i < len(layer_sizes) - 2:
-                layers.append(nn.ReLU())
                 if torch.rand() < 0.1:
+                    print(f"Dropout at layer {i}")
                     layers.append(nn.Dropout(0.25 + torch.rand()/4))
+                layers.append(nn.ReLU())
         self.network = nn.Sequential(*layers)
         self.network.apply(init_weights)
 
