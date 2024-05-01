@@ -7,13 +7,29 @@ from matplotlib.pyplot import *
 ## More layers for resnet
 ## make sure to introduce dropout lyers fro generalization and make sure to initialize the weights correctly
 ## xaviar distribution for initialization or gaussian.
+def init_weights(m):
+    if isinstance(m, nn.Linear):
+        torch.nn.init.xavier_uniform(m.weight)
+        # m.bias.data.fill_(0.01)
 
 class Res(nn.Module):
     def __init__(self, input_dim, hidden_dim):
         super(Res, self).__init__()
+        ## Layer initialization
         self.fc1 = nn.Linear(input_dim, hidden_dim)
         self.fc2 = nn.Linear(hidden_dim, hidden_dim)
-        self.fc3 = nn.Linear(hidden_dim, input_dim)
+        self.fc3 = nn.Linear(hidden_dim, hidden_dim)
+        self.fc4 = nn.Linear(hidden_dim, hidden_dim)
+        self.fc5 = nn.Linear(hidden_dim, input_dim)
+        self.dropout1 = nn.Dropout(0.5)
+
+        ## weight initialization
+        torch.nn.init.xavier_uniform(self.fc1.weight)
+        torch.nn.init.xavier_uniform(self.fc2.weight)
+        torch.nn.init.xavier_uniform(self.fc3.weight)
+        torch.nn.init.xavier_uniform(self.fc4.weight)
+        torch.nn.init.xavier_uniform(self.fc5.weight)
+        
 
     def forward(self, x):
         x1 = torch.tanh(self.fc1(x)) ## do relu instead unless strong reason for tanh
@@ -24,6 +40,7 @@ class Res(nn.Module):
 class SimpleReluNet(nn.Module):
     def __init__(self, input_dim, hidden_dim):
         super(SimpleReluNet, self).__init__()
+        ## Layer initialization
         self.fc1 = nn.Linear(input_dim, hidden_dim)
         self.fc2 = nn.Linear(hidden_dim, hidden_dim)
         self.fc3 = nn.Linear(hidden_dim, hidden_dim)
@@ -31,6 +48,13 @@ class SimpleReluNet(nn.Module):
         self.fc5 = nn.Linear(hidden_dim, input_dim)
         self.dropout1 = nn.Dropout(0.5)
         self.dropout2 = nn.Dropout(0.25)
+        
+        ## weight initialization
+        torch.nn.init.xavier_uniform(self.fc1.weight)
+        torch.nn.init.xavier_uniform(self.fc2.weight)
+        torch.nn.init.xavier_uniform(self.fc3.weight)
+        torch.nn.init.xavier_uniform(self.fc4.weight)
+        torch.nn.init.xavier_uniform(self.fc5.weight)
 
     def forward(self, x):
         x1 = nn.Relu(self.fc1(x))
@@ -52,6 +76,7 @@ class GeneralReluNet(nn.Module):
                 if torch.rand() < 0.1:
                     layers.append(nn.Dropout(0.25 + torch.rand()/4))
         self.network = nn.Sequential(*layers)
+        self.network.apply(init_weights)
 
     def forward(self, x):
         return self.network(x)

@@ -7,44 +7,29 @@ import tqdm as progressbar
 from matplotlib.pyplot import *
 import torch.nn.functional as F
 import numpy as np
-from ExampleDistributions.datagenerator import *
-
-torch.pi = torch.acos(torch.zeros(1)).item() * 2
+from sin_prod import *
 
 
-class Res(nn.Module):
-    def __init__(self, input_dim, hidden_dim):
-        super(Res, self).__init__()
-        self.fc1 = nn.Linear(input_dim, hidden_dim)
-        self.fc2 = nn.Linear(hidden_dim, hidden_dim)
-        self.fc3 = nn.Linear(hidden_dim, input_dim)
-
-    def forward(self, x):
-        x1 = torch.tanh(self.fc1(x)) ## do relu instead unless strong reason for tanh
-        x2 = torch.tanh(self.fc2(1.0 * x + x1)) 
-        x3 = self.fc3(x2)
-        return x3
-
-def pde(tar_sc, dtar_sc, model, x):
+## tested in sin_prod.py
+def pde(tar_sc , model, x):
     x= x.requires_grad_(True)  # Create a separate variable for use in this function
-    x_numpy = x.cpu().detach()
-    q = torch.tensor(tar_sc(x_numpy), device=x.device)
-    q_prime = torch.tensor(dtar_sc(x_numpy), device=x.device)
-    y = model(x)
-    dvx_dx = torch.autograd.grad(y, x, create_graph=True)[0]
-    d2vx_dx2 = torch.autograd.grad(dvx_dx, x, create_graph=True)[0]
-    pde_lhs = d2vx_dx2 + dvx_dx * q+ y * q_prime
+    dy = torch.func.jacrev(model)
+    dy_dotq = lambda x : torch.dot(dy(x), tar_sc(x))
+    d_dy_dotq = torch.func.jacrev(dy_dotq)
+    divergence_dy = lambda x : torch.trace(torch.func.jacrev(dy)(x))
+    d_divergence_dy = torch.func.jacrev(divergence_dy)
+    pde_lhs = d_divergence_dy(x) + d_dy_dotq(x)
     return pde_lhs
 
 
 
-def train_pde(model, x_gr, p_gr, q_gr, tar_sc, dtar_sc, pde, lr, batchsize, device, xmin=torch.tensor([-10.0]), xmax=torch.tensor([10.0]), m=100, iter_num=10):
+def train_pde(model, tar_sc, dataset_path, lr, batchsize, device, epochs=10):
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
-    dataset = create_dataset(x_gr, p_gr, q_gr, m, xmin, xmax)
+    dataset = torch.load(dataset_path)
     dataloader = DataLoader(dataset, batch_size=batchsize, shuffle=True)
     print("Training the model...")
-    with progressbar.tqdm (range(iter_num), unit="epoch") as pbar:
-        for epoch in range(iter_num):
+    with progressbar.tqdm (range(epochs), unit="epoch") as pbar:
+        for epoch in range(epochs):
             optimizer.zero_grad()
             for t, (x, y) in enumerate(dataloader):
                 x_g = x.to(device)
@@ -55,7 +40,7 @@ def train_pde(model, x_gr, p_gr, q_gr, tar_sc, dtar_sc, pde, lr, batchsize, devi
                 new_output = torch.zeros_like(output)  # Create a new tensor with the same shape and device
                 for i, x_i in enumerate(x_g):
                     x_i = x_i.detach().clone().to(torch.float32).unsqueeze(0)
-                    new_output[i] = pde(tar_sc, dtar_sc, model, x_i)
+                    new_output[i] = pde(tar_sc, model, x_i)
                 output = new_output  # Assign the new tensor to output
                 pde_loss = torch.nn.functional.mse_loss(output, y_g.float())
                 boundary_loss = 1/2 * model(torch.tensor([-10.0], device=device, dtype=torch.float32))**2 + 1/2*model(torch.tensor([10.0], device=device, dtype=torch.float32))**2
@@ -69,10 +54,10 @@ def train_pde(model, x_gr, p_gr, q_gr, tar_sc, dtar_sc, pde, lr, batchsize, devi
             pbar.update()
     return model
 
-def solve_newton_step_pinn(x_gr, p_gr, q_gr, tar_sc, dtar_sc, pde, lr, batchsize, device, xmin, xmax, m, iter_num=25):
+def solve_newton_step_pinn(x_gr, p_gr, q_gr, tar_sc, dtar_sc, pde, lr, batchsize, device, xmin, xmax, m, epochs=25):
     model = Res(input_dim=1, hidden_dim=50).to(torch.float32)
     model = model.to(device)
-    model = train_pde(model, x_gr, p_gr, q_gr, tar_sc, dtar_sc, pde, lr, batchsize, device, xmin, xmax, m, iter_num)
+    model = train_pde(model, x_gr, p_gr, q_gr, tar_sc, dtar_sc, pde, lr, batchsize, device, xmin, xmax, m, epochs)
     model.eval()
     with torch.no_grad():
         x_gr_tensor = torch.tensor(x_gr, dtype=torch.float32, device=device).unsqueeze(1)
