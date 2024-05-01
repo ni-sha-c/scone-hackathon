@@ -8,9 +8,10 @@ from matplotlib.pyplot import *
 import torch.nn.functional as F
 import numpy as np
 from numpy import *
-from datagenerator import *
+from ExampleDistributions.datagenerator import *
 
 torch.pi = torch.acos(torch.zeros(1)).item() * 2
+
 
 class Res(nn.Module):
     def __init__(self, input_dim, hidden_dim):
@@ -20,8 +21,8 @@ class Res(nn.Module):
         self.fc3 = nn.Linear(hidden_dim, input_dim)
 
     def forward(self, x):
-        x1 = torch.tanh(self.fc1(x))
-        x2 = torch.tanh(self.fc2(1.0 * x + x1))
+        x1 = torch.tanh(self.fc1(x)) ## do relu instead unless strong reason for tanh
+        x2 = torch.tanh(self.fc2(1.0 * x + x1)) 
         x3 = self.fc3(x2)
         return x3
 

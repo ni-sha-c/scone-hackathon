@@ -1,5 +1,5 @@
 import torch
-FINAL_2PI = 2 * torch.tensor(3.14159265358979323846)
+FINAL_2PI = 2 * torch.tensor(torch.pi)
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 

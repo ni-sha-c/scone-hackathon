@@ -15,16 +15,14 @@ target_gaussian = Gaussiannd([1], [[0, 0]], [np.eye(2)])
 
 ## We use 2d_unimodal as source
 def source_score(x):
-    inp_x = x.numpy()
-    out = source_gaussian.logprob_grad(inp_x)
-    return torch.from_numpy(out)
+    out = source_gaussian.logprob_grad(x)
+    return out
      
 
 ## We use 2d_bimodal gaussian as target
 def target_score(x):
-    inp_x = x.numpy()
-    out = source_gaussian.logprob_grad(inp_x)
-    return torch.from_numpy(out)
+    out = source_gaussian.logprob_grad(x)
+    return out
 
 class PDEDataset(Dataset):
     def __init__(self, x_gr):
