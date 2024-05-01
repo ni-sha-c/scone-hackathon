@@ -6,6 +6,7 @@ from matplotlib.pyplot import *
 # initialize grid
 device = 'cuda' if cuda.is_available() else 'cpu'
 eye_cuda = eye(2).to(device)
+
 def laplacian(n_x,n_y,dx,dy):
     nx, ny = n_x-2, n_y-2
     idx2, idy2 = 1/dx/dx, 1/dy/dy
