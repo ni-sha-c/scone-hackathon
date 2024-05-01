@@ -6,7 +6,7 @@ from matplotlib.pyplot import *
 ## 5 or more with relu
 ## More layers for resnet
 ## make sure to introduce dropout lyers fro generalization and make sure to initialize the weights correctly
-## zevian distribution for initialization or gaussian.
+## xaviar distribution for initialization or gaussian.
 
 class Res(nn.Module):
     def __init__(self, input_dim, hidden_dim):
@@ -29,14 +29,15 @@ class SimpleReluNet(nn.Module):
         self.fc3 = nn.Linear(hidden_dim, hidden_dim)
         self.fc4 = nn.Linear(hidden_dim, hidden_dim)
         self.fc5 = nn.Linear(hidden_dim, input_dim)
-        self.dropout = nn.Dropout(0.5)
+        self.dropout1 = nn.Dropout(0.5)
+        self.dropout2 = nn.Dropout(0.25)
 
     def forward(self, x):
         x1 = nn.Relu(self.fc1(x))
-        x2 = nn.Relu(self.dropout(self.fc2(x1)))
+        x2 = nn.Relu(self.dropout1(self.fc2(x1)))
         x3 = nn.Relu(self.fc3(x2))
-        x4 = nn.Relu(self.dropout(self.fc4(x3)))
-        x5 = nn.Relu(self.fc5(x4))
+        x4 = nn.Relu(self.dropout2(self.fc4(x3)))
+        x5 = self.fc5(x4)
         return x5
     
 class GeneralReluNet(nn.Module):
@@ -48,6 +49,8 @@ class GeneralReluNet(nn.Module):
             layers.append(nn.Linear(layer_sizes[i], layer_sizes[i+1]))
             if i < len(layer_sizes) - 2:
                 layers.append(nn.ReLU())
+                if torch.rand() < 0.1:
+                    layers.append(nn.Dropout(0.25 + torch.rand()/4))
         self.network = nn.Sequential(*layers)
 
     def forward(self, x):
