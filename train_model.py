@@ -51,8 +51,13 @@ def train_pde(model, tar_sc, dataloader, optimizer, batchsize, device, epochs=10
             pbar.update()
     return model
 
-def solve_newton_step_pinn(tar_sc, lr, batchsize, device, num_train, num_test, epochs=25):
-    model = Res(input_dim=2, hidden_dim=50, output_dim=1)
+def solve_newton_step_pinn(tar_sc, lr, batchsize, device, num_train, num_test, model_type, epochs=25):
+    if model_type == "res":
+        model = Res(input_dim=2, hidden_dim=50, output_dim=1)
+    elif model_type == "general":
+        model = GeneralReLuNet(input_size = 2, hidden_sizes = [50, 50, 64, 25], output_size = 1)
+    else:
+        model = SimpleReluNet(2, 50, 1)
     model = model.to(device)
     x_max = 2*torch.pi
     x_min = 0
@@ -71,4 +76,4 @@ def solve_newton_step_pinn(tar_sc, lr, batchsize, device, num_train, num_test, e
         model_predictions = model(x_gr).cpu().numpy().flatten()
     return model_predictions, test_dataset
 
-solve_newton_step_pinn(q, 0.01, 100, "cpu", 2000, 1000, epochs = 2)
+solve_newton_step_pinn(q, 0.01, 100, "cpu", 2000, 1000, "", epochs = 2)

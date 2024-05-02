@@ -46,23 +46,23 @@ class SimpleReluNet(nn.Module):
         self.dropout2 = nn.Dropout(0.25)
 
         ## weight initialization
-        torch.nn.init.xavier_uniform(self.fc1.weight)
-        torch.nn.init.xavier_uniform(self.fc2.weight)
-        torch.nn.init.xavier_uniform(self.fc3.weight)
-        torch.nn.init.xavier_uniform(self.fc4.weight)
-        torch.nn.init.xavier_uniform(self.fc5.weight)
+        nn.init.xavier_uniform_(self.fc1.weight)
+        nn.init.xavier_uniform_(self.fc2.weight)
+        nn.init.xavier_uniform_(self.fc3.weight)
+        nn.init.xavier_uniform_(self.fc4.weight)
+        nn.init.xavier_uniform_(self.fc5.weight)
 
     def forward(self, x):
-        x1 = nn.Relu(self.fc1(x))
-        x2 = nn.Relu(self.dropout1(self.fc2(x1)))
-        x3 = nn.Relu(self.fc3(x2))
-        x4 = nn.Relu(self.dropout2(self.fc4(x3)))
+        x1 = nn.functional.relu(self.fc1(x))
+        x2 = nn.functional.relu(self.dropout1(self.fc2(x1)))
+        x3 = nn.functional.relu(self.fc3(x2))
+        x4 = nn.functional.relu(self.dropout2(self.fc4(x3)))
         x5 = self.fc5(x4)
         return x5
-    
-class GeneralReluNet(nn.Module):
+
+class GeneralReLuNet(nn.Module):
     def __init__(self, input_size, hidden_sizes, output_size):
-        super(GeneralReluNet, self).__init__()
+        super(GeneralReLuNet, self).__init__()
         layers = []
         layer_sizes = [input_size] + hidden_sizes + [output_size]
         for i in range(len(layer_sizes) - 1):
@@ -71,7 +71,7 @@ class GeneralReluNet(nn.Module):
                 if torch.rand() < 0.1:
                     print(f"Dropout at layer {i}")
                     layers.append(nn.Dropout(0.25 + torch.rand()/4))
-                layers.append(nn.ReLU())
+                layers.append(nn.ReLu())
         self.network = nn.Sequential(*layers)
         self.network.apply(init_weights)
 
