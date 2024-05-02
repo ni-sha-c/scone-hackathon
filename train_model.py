@@ -51,22 +51,24 @@ def train_pde(model, tar_sc, dataloader, optimizer, batchsize, device, epochs=10
             pbar.update()
     return model
 
-def solve_newton_step_pinn(tar_sc, lr, batchsize, device, epochs=25):
+def solve_newton_step_pinn(tar_sc, lr, batchsize, device, num_train, num_test, epochs=25):
     model = Res(input_dim=2, hidden_dim=50, output_dim=1)
     model = model.to(device)
-    dataset_path = "dataset_sin_10000.pth"
-    dataset = torch.load(dataset_path)
-    train_set, test_set = torch.utils.data.random_split(dataset, [0.7, 0.3])
-    train_dataloader = DataLoader(train_set, batch_size=batchsize, shuffle=True)
-    test_dataloader = DataLoader(test_set, batch_size=batchsize, shuffle=True)
+    x_max = 2*torch.pi
+    x_min = 0
+    ## train
+    x_gr = torch.rand(num_train, 2) * (abs(x_max) + abs(x_min)) + x_min
+    train_dataset = create_dataset(x_gr)
+    train_dataloader = DataLoader(train_dataset, batch_size=batchsize, shuffle=True)
+    ## test
+    x_gr = torch.rand(num_test, 2) * (abs(x_max) + abs(x_min)) + x_min
+    test_dataset = create_dataset(x_gr)
 
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
     model = train_pde(model, tar_sc, train_dataloader, optimizer, batchsize, epochs)
     model.eval()
     with torch.no_grad():
-        model_predictions = np.empty(len(test_dataloader) * batchsize)
-        for t, (x_gr, y_gr) in enumerate(test_dataloader):
-            model_predictions = model(x_gr).cpu().numpy().flatten()
-    return model_predictions
+        model_predictions = model(x_gr).cpu().numpy().flatten()
+    return model_predictions, test_dataset
 
-solve_newton_step_pinn(q, 0.01, 100, "cpu", epochs = 2)
+solve_newton_step_pinn(q, 0.01, 100, "cpu", 2000, 1000, epochs = 2)
