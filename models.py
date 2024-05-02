@@ -32,6 +32,22 @@ class Res(nn.Module):
         x2 = torch.tanh(self.dropout1(self.fc2(x1))) 
         x3 = self.fc3(x2 + x1)
         return x3
+        
+class SimplestNeuralNetwork(nn.Module):
+    def __init__(self, input_dim, hidden_dim, output_dim):
+        super(SimplestNeuralNetwork, self).__init__()
+        ## Layer initialization
+        self.fc1 = nn.Linear(input_dim, hidden_dim)
+        self.fc5 = nn.Linear(hidden_dim, output_dim)
+
+        ## weight initialization
+        nn.init.xavier_uniform_(self.fc1.weight)
+        nn.init.xavier_uniform_(self.fc5.weight)
+
+    def forward(self, x):
+        x1 = nn.functional.relu(self.fc1(x))
+        x5 = self.fc5(x1)
+        return x5
 
 class SimpleReluNet(nn.Module):
     def __init__(self, input_dim, hidden_dim, output_dim):
