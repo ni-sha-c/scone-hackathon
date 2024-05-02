@@ -51,7 +51,7 @@ def train_pde(model, tar_sc, dataloader, optimizer, batchsize, device, epochs=10
     return model
 
 def solve_newton_step_pinn(tar_sc, lr, batchsize, device, epochs=25):
-    model = Res(input_dim=1, hidden_dim=50).to(torch.float32)
+    model = Res(input_dim=2, hidden_dim=50, output_dim=1)
     model = model.to(device)
     dataset_path = "dataset_sin_10000.pth"
     dataset = torch.load(dataset_path)
@@ -67,3 +67,5 @@ def solve_newton_step_pinn(tar_sc, lr, batchsize, device, epochs=25):
         for t, (x_gr, y_gr) in enumerate(test_dataloader):
             model_predictions = model(x_gr).cpu().numpy().flatten()
     return model_predictions
+
+solve_newton_step_pinn(q, 0.01, 100, "cpu", epochs = 2)
