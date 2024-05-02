@@ -32,13 +32,13 @@ def train_pde(model, tar_sc, dataloader, optimizer, batchsize, device, epochs=10
                 # y_g = y.to(device)
                 x_g, y_g = x, y
                 # y_g = y_g.unsqueeze(1)
-                output = torch.zeros(batchsize, 1, requires_grad=True)
+                output = torch.empty(batchsize, 1, requires_grad=True)
                 # output = output.to(device)
-                new_output = pde(tar_sc, model, x_g)
-                # new_output = torch.empty_like(output)  # Create a new tensor with the same shape and device
-                # for i, x_i in enumerate(x_g):
-                #     x_i = x_i.detach().clone().to(torch.float32).unsqueeze(0)
-                #     new_output[i] = pde(tar_sc, model, x_i)
+                # new_output = pde(tar_sc, model, x_g)
+                new_output = torch.empty_like(output)  # Create a new tensor with the same shape and device
+                for i, x_i in enumerate(x_g):
+                    x_i = x_i.detach().clone().to(torch.float32).unsqueeze(0)
+                    new_output[i] = pde(tar_sc, model, x_i)
                 output = new_output  # Assign the new tensor to output
                 pde_loss = torch.nn.functional.mse_loss(output, y_g.float())
                 # loss = pde_loss
