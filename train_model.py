@@ -28,11 +28,12 @@ def train_pde(model, tar_sc, dataloader, optimizer, batchsize, device, epochs=10
         for epoch in range(epochs):
             optimizer.zero_grad()
             for t, (x, y) in enumerate(dataloader):
-                x_g = x.to(device)
-                y_g = y.to(device)
+                # x_g = x.to(device)
+                # y_g = y.to(device)
+                x_g, y_g = x, y
                 # y_g = y_g.unsqueeze(1)
                 output = torch.zeros(batchsize, 1, requires_grad=True)
-                output = output.to(device)
+                # output = output.to(device)
                 new_output = pde(tar_sc, model, x_g)
                 # new_output = torch.empty_like(output)  # Create a new tensor with the same shape and device
                 # for i, x_i in enumerate(x_g):

@@ -18,26 +18,20 @@ class Res(nn.Module):
         ## Layer initialization
         self.fc1 = nn.Linear(input_dim, hidden_dim)
         self.fc2 = nn.Linear(hidden_dim, hidden_dim)
-        self.fc3 = nn.Linear(hidden_dim, hidden_dim)
-        self.fc4 = nn.Linear(hidden_dim, hidden_dim)
-        self.fc5 = nn.Linear(hidden_dim, output_dim)
+        self.fc3 = nn.Linear(hidden_dim, output_dim)
         self.dropout1 = nn.Dropout(0.5)
 
         ## weight initialization
-        torch.nn.init.xavier_uniform(self.fc1.weight)
-        torch.nn.init.xavier_uniform(self.fc2.weight)
-        torch.nn.init.xavier_uniform(self.fc3.weight)
-        torch.nn.init.xavier_uniform(self.fc4.weight)
-        torch.nn.init.xavier_uniform(self.fc5.weight)
+        torch.nn.init.xavier_uniform_(self.fc1.weight)
+        torch.nn.init.xavier_uniform_(self.fc2.weight)
+        torch.nn.init.xavier_uniform_(self.fc3.weight)
         
 
     def forward(self, x):
         x1 = torch.tanh(self.fc1(x))
-        x2 = torch.tanh(self.fc2(1.0 * x + x1)) 
-        x3 = torch.tanh(self.dropout1(self.fc3(x2)))
-        x4 = torch.tanh(self.fc4(1.0 * x + x3))
-        x5 = torch.tanh(self.fc5(x4))
-        return x5
+        x2 = torch.tanh(self.dropout1(self.fc2(x1))) 
+        x3 = self.fc3(x2 + x1)
+        return x3
 
 class SimpleReluNet(nn.Module):
     def __init__(self, input_dim, hidden_dim, output_dim):
