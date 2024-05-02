@@ -8,7 +8,7 @@ from matplotlib.pyplot import *
 import torch.nn.functional as F
 import numpy as np
 from sin_prod import *
-
+from models import *
 
 ## tested in sin_prod.py
 def pde(tar_sc , model, x):
@@ -21,12 +21,8 @@ def pde(tar_sc , model, x):
     pde_lhs = d_divergence_dy(x) + d_dy_dotq(x)
     return pde_lhs
 
-
-
-def train_pde(model, tar_sc, dataset_path, lr, batchsize, device, epochs=10):
-    optimizer = torch.optim.Adam(model.parameters(), lr=lr)
-    dataset = torch.load(dataset_path)
-    dataloader = DataLoader(dataset, batch_size=batchsize, shuffle=True)
+## remains to fix
+def train_pde(model, tar_sc, dataloader, optimizer, batchsize, device, epochs=10):
     print("Training the model...")
     with progressbar.tqdm (range(epochs), unit="epoch") as pbar:
         for epoch in range(epochs):
@@ -34,7 +30,7 @@ def train_pde(model, tar_sc, dataset_path, lr, batchsize, device, epochs=10):
             for t, (x, y) in enumerate(dataloader):
                 x_g = x.to(device)
                 y_g = y.to(device)
-                y_g = y_g.unsqueeze(1)
+                # y_g = y_g.unsqueeze(1)
                 output = torch.zeros(batchsize, 1, requires_grad=True)
                 output = output.to(device)
                 new_output = torch.zeros_like(output)  # Create a new tensor with the same shape and device
@@ -43,8 +39,7 @@ def train_pde(model, tar_sc, dataset_path, lr, batchsize, device, epochs=10):
                     new_output[i] = pde(tar_sc, model, x_i)
                 output = new_output  # Assign the new tensor to output
                 pde_loss = torch.nn.functional.mse_loss(output, y_g.float())
-                boundary_loss = 1/2 * model(torch.tensor([-10.0], device=device, dtype=torch.float32))**2 + 1/2*model(torch.tensor([10.0], device=device, dtype=torch.float32))**2
-                loss = pde_loss + boundary_loss
+                loss = pde_loss
                 print("loss:", loss)
                 optimizer.zero_grad()
                 loss.backward()
@@ -54,12 +49,16 @@ def train_pde(model, tar_sc, dataset_path, lr, batchsize, device, epochs=10):
             pbar.update()
     return model
 
-def solve_newton_step_pinn(x_gr, p_gr, q_gr, tar_sc, dtar_sc, pde, lr, batchsize, device, xmin, xmax, m, epochs=25):
+def solve_newton_step_pinn(tar_sc, lr, batchsize, device, epochs=25):
     model = Res(input_dim=1, hidden_dim=50).to(torch.float32)
     model = model.to(device)
-    model = train_pde(model, x_gr, p_gr, q_gr, tar_sc, dtar_sc, pde, lr, batchsize, device, xmin, xmax, m, epochs)
+    dataset_path = "dataset_sin_10000.pth"
+    dataset = torch.load(dataset_path)
+    dataloader = DataLoader(dataset, batch_size=batchsize, shuffle=True)
+    optimizer = torch.optim.Adam(model.parameters(), lr=lr)
+    model = train_pde(model, tar_sc, dataloader, optimizer, batchsize, epochs)
     model.eval()
-    with torch.no_grad():
-        x_gr_tensor = torch.tensor(x_gr, dtype=torch.float32, device=device).unsqueeze(1)
-        model_predictions = model(x_gr_tensor).cpu().numpy().flatten()
-    return model_predictions
+    # with torch.no_grad():
+    #     x_gr_tensor = torch.tensor(x_gr, dtype=torch.float32, device=device).unsqueeze(1)
+    #     model_predictions = model(x_gr_tensor).cpu().numpy().flatten()
+    # return model_predictions

@@ -13,14 +13,14 @@ def init_weights(m):
         # m.bias.data.fill_(0.01)
 
 class Res(nn.Module):
-    def __init__(self, input_dim, hidden_dim):
+    def __init__(self, input_dim, hidden_dim, output_dim):
         super(Res, self).__init__()
         ## Layer initialization
         self.fc1 = nn.Linear(input_dim, hidden_dim)
         self.fc2 = nn.Linear(hidden_dim, hidden_dim)
         self.fc3 = nn.Linear(hidden_dim, hidden_dim)
         self.fc4 = nn.Linear(hidden_dim, hidden_dim)
-        self.fc5 = nn.Linear(hidden_dim, input_dim)
+        self.fc5 = nn.Linear(hidden_dim, output_dim)
         self.dropout1 = nn.Dropout(0.5)
 
         ## weight initialization
@@ -40,14 +40,14 @@ class Res(nn.Module):
         return x5
 
 class SimpleReluNet(nn.Module):
-    def __init__(self, input_dim, hidden_dim):
+    def __init__(self, input_dim, hidden_dim, output_dim):
         super(SimpleReluNet, self).__init__()
         ## Layer initialization
         self.fc1 = nn.Linear(input_dim, hidden_dim)
         self.fc2 = nn.Linear(hidden_dim, hidden_dim)
         self.fc3 = nn.Linear(hidden_dim, hidden_dim)
         self.fc4 = nn.Linear(hidden_dim, hidden_dim)
-        self.fc5 = nn.Linear(hidden_dim, input_dim)
+        self.fc5 = nn.Linear(hidden_dim, output_dim)
         self.dropout1 = nn.Dropout(0.5)
         self.dropout2 = nn.Dropout(0.25)
 
@@ -67,10 +67,10 @@ class SimpleReluNet(nn.Module):
         return x5
     
 class GeneralReluNet(nn.Module):
-    def __init__(self, input_size, hidden_sizes):
+    def __init__(self, input_size, hidden_sizes, output_size):
         super(GeneralReluNet, self).__init__()
         layers = []
-        layer_sizes = [input_size] + hidden_sizes + [input_size]
+        layer_sizes = [input_size] + hidden_sizes + [output_size]
         for i in range(len(layer_sizes) - 1):
             layers.append(nn.Linear(layer_sizes[i], layer_sizes[i+1]))
             if i < len(layer_sizes) - 2:
