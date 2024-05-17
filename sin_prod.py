@@ -30,16 +30,16 @@ def phi(x : torch.tensor) -> torch.tensor:
     return torch.prod(torch.sin(x), dim = 0)
 
 def q(x : torch.tensor) -> torch.tensor:
-    return torch.ones(x.shape)
+    return torch.ones(x.shape, device = device)
 
 def p(x : torch.tensor) -> torch.tensor:
-    sum_cos = torch.cos(torch.sum(x, dim = 1))
+    sum_cos = torch.cos(torch.sum(x, dim = 1)).to(device)
     sinx = torch.sin(x)
     cosx = torch.cos(x)
-    t = torch.stack((cosx[:, 0]*sinx[:, 1], sinx[:, 0]*cosx[:, 1]), dim = 1)
+    t = torch.stack((cosx[:, 0]*sinx[:, 1], sinx[:, 0]*cosx[:, 1]), dim = 1).to(device)
     return sum_cos.reshape(-1, 1) + 1 - 2*t
 
-def plot_contour(func):
+def plot_contour(func, title = "Contour plot for phi(x) = sin(x)sin(y)"):
     x = torch.linspace(0,2*torch.pi, 200)
     X,Y = torch.meshgrid(x, x)
     Z = torch.empty_like(X)
@@ -48,7 +48,7 @@ def plot_contour(func):
             Z[i, j] = func(torch.tensor([X[i, j], Y[i, j]]))
     plt.contourf(X, Y, Z)
     plt.colorbar()
-    plt.title("Contour plot for phi(x) = sin(x)sin(y)")
+    plt.title(title)
     plt.show()
 
 
@@ -56,6 +56,16 @@ def pde_rhs(x):
     with torch.no_grad():
         rhs = p(x) - q(x)
     return rhs
+
+# plot_contour(phi)
+
+num_samples = 2500
+dim = 2
+x_max = 2*torch.pi
+x_min = 0
+x_gr = torch.rand(num_samples, 2) * (abs(x_max) + abs(x_min)) + x_min
+dataset = create_dataset(x_gr)
+# torch.save(dataset, f"dataset_sin_{num_samples}.pth")
 
 # plot_contour(phi)
 

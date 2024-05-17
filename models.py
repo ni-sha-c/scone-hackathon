@@ -1,6 +1,5 @@
 import torch
 import torch.nn as nn
-from matplotlib.pyplot import *
 
 ## phi = sin(x)sin(y)
 ## 5 or more with relu
@@ -9,7 +8,7 @@ from matplotlib.pyplot import *
 ## xaviar distribution for initialization or gaussian.
 def init_weights(m):
     if isinstance(m, nn.Linear):
-        torch.nn.init.xavier_uniform(m.weight)
+        nn.init.xavier_uniform(m.weight)
         # m.bias.data.fill_(0.01)
 
 class Res(nn.Module):
@@ -22,17 +21,17 @@ class Res(nn.Module):
         self.dropout1 = nn.Dropout(0.5)
 
         ## weight initialization
-        torch.nn.init.xavier_uniform_(self.fc1.weight)
-        torch.nn.init.xavier_uniform_(self.fc2.weight)
-        torch.nn.init.xavier_uniform_(self.fc3.weight)
-        
+        nn.init.xavier_uniform_(self.fc1.weight)
+        nn.init.xavier_uniform_(self.fc2.weight)
+        nn.init.xavier_uniform_(self.fc3.weight)
+
 
     def forward(self, x):
         x1 = torch.tanh(self.fc1(x))
-        x2 = torch.tanh(self.dropout1(self.fc2(x1))) 
+        x2 = torch.tanh(self.dropout1(self.fc2(x1)))
         x3 = self.fc3(x2 + x1)
         return x3
-        
+
 class SimplestNeuralNetwork(nn.Module):
     def __init__(self, input_dim, hidden_dim, output_dim):
         super(SimplestNeuralNetwork, self).__init__()
